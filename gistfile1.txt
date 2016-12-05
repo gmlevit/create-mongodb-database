@@ -1,0 +1,47 @@
+function createMongoDb(callback) {
+    var Db = require('mongodb').Db;
+    var Server = require('mongodb').Server;
+    var dbName = 'testdb', dbHost = 'localhost', dbPort = '27017';
+    var dbUser = 'testuser', dbPassword = 'testpassword';
+
+    var db = new Db(dbName, new Server(dbHost, dbPort));
+
+    // Connect to the database
+    db.open(function (err, db) {
+        if (err) {
+            console.log(err);
+            callback();
+        }
+        else {
+            // Authenticate user (basically check if user exists)
+            db.authenticate(dbUser, dbPassword, function(err, result) {
+                // If error authenticating:
+                // user doesn't exist, so create user
+                if (err){
+                    db.addUser(dbUser, dbPassword, {roles: ["dbOwner"]}, function(err, result) {
+                        if (err){
+                            console.log(err);
+                        }
+
+                        // close database connection
+                        db.close();
+                        callback();
+                    });
+                }
+                // Otherwise, user exists
+                else{
+
+                    // close connection
+                    db.close();
+                    callback();
+                }
+            });
+        }
+    });
+}
+
+// Calls function createMongoDb
+createMongoDb(function() {
+    // Do something here
+   console.log('MongoDB database created');
+});
